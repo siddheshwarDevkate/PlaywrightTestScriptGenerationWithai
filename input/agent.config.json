@@ -1,0 +1,43 @@
+{
+  "ai": {
+    "provider": "gemini",
+    "model": "gemini-2.0-flash",
+    "maxTokens": 8096,
+    "temperature": 0.2,
+    "apiKeyEnvVar": "GROQ_API_KEY"
+  },
+
+  "application": {
+    "baseUrl": "https://www.saucedemo.com",
+    "environment": "staging",
+    "authRequired": true,
+    "credentials": {
+      "username": "standard_user",
+      "password": "secret_sauce"
+    }
+  },
+
+  "mcp": {
+    "playwrightMcpEnabled": true,
+    "browser": "chromium",
+    "headless": false,
+    "timeout": 30000,
+    "screenshotOnSnapshot": true
+  },
+
+  "output": {
+    "folder": "generated",
+    "language": "typescript",
+    "pattern": "POM",
+    "overwriteExisting": true
+  },
+
+  "generation": {
+    "generateBasePage": true,
+    "generateUtils": true,
+    "generateConfig": true,
+    "inferValidationsFromDOM": true,
+    "generateNegativeTests": true,
+    "generateEdgeCases": true
+  }
+}
