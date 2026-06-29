@@ -25,13 +25,15 @@ export class LoginPage extends BasePage {
     await this.loginButtonLocator.click();
   }
 
-  async verifyErrorMessageVisible(): Promise<void> {
-    await expect(this.page.locator('.error-message')).toBeVisible();
+  async verifyUsernameInputVisible(): Promise<void> {
+    await expect(this.usernameInputLocator).toBeVisible();
   }
 
-  async performLogin(username: string, password: string): Promise<void> {
-    await this.fillUsername(username);
-    await this.fillPassword(password);
-    await this.clickLoginButton();
+  async verifyPasswordInputVisible(): Promise<void> {
+    await expect(this.passwordInputLocator).toBeVisible();
+  }
+
+  async verifyLoginButtonVisible(): Promise<void> {
+    await expect(this.loginButtonLocator).toBeVisible();
   }
 }

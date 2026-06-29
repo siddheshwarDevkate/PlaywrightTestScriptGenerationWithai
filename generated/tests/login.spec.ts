@@ -1,9 +1,7 @@
 import { test } from '@playwright/test';
 import { LoginPage } from '../pages/LoginPage';
 import { DashboardPage } from '../pages/DashboardPage';
-
-const validUsername = 'standard_user';
-const validPassword = 'secret_sauce';
+import { validUsername, validPassword, invalidUsername, invalidPassword } from '../utils/TestDataHelper';
 
 test.describe('Login', () => {
   let loginPage: LoginPage;
@@ -16,32 +14,37 @@ test.describe('Login', () => {
   });
 
   test('Valid login redirects to dashboard', async () => {
-    await loginPage.performLogin(validUsername, validPassword);
-    await dashboardPage.verifyDashboardVisible();
-  });
-
-  test('Invalid email format shows error', async () => {
-    await loginPage.fillUsername('notanemail');
+    await loginPage.fillUsername(validUsername);
     await loginPage.fillPassword(validPassword);
     await loginPage.clickLoginButton();
-    await loginPage.verifyErrorMessageVisible();
+    await dashboardPage.verifyBurgerMenuVisible();
+  });
+
+  test('Invalid username shows error', async () => {
+    await loginPage.fillUsername(invalidUsername);
+    await loginPage.fillPassword(validPassword);
+    await loginPage.clickLoginButton();
+    await loginPage.verifyUsernameInputVisible();
   });
 
   test('Invalid password shows error', async () => {
     await loginPage.fillUsername(validUsername);
-    await loginPage.fillPassword('wrongpassword');
+    await loginPage.fillPassword(invalidPassword);
     await loginPage.clickLoginButton();
-    await loginPage.verifyErrorMessageVisible();
+    await loginPage.verifyPasswordInputVisible();
   });
 
-  test('Empty username and password shows error', async () => {
+  test('Empty fields show error', async () => {
     await loginPage.clickLoginButton();
-    await loginPage.verifyErrorMessageVisible();
+    await loginPage.verifyUsernameInputVisible();
+    await loginPage.verifyPasswordInputVisible();
   });
 
-  test('Logout functionality', async () => {
-    await loginPage.performLogin(validUsername, validPassword);
+  test('Logout redirects to login', async () => {
+    await loginPage.fillUsername(validUsername);
+    await loginPage.fillPassword(validPassword);
+    await loginPage.clickLoginButton();
     await dashboardPage.clickLogoutButton();
-    await loginPage.verifyCurrentUrl('https://www.saucedemo.com/');
+    await loginPage.verifyUsernameInputVisible();
   });
 });

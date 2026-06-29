@@ -158,11 +158,44 @@ Verify:   verifyErrorMessageVisible(), verifyCurrentUrl()
 Compound: performLogin(), performSearch()
 ```
 
-## 9. OUTPUT STRUCTURE
-```
-generated/
-├── pages/BasePage.ts, [Name]Page.ts
-├── tests/[feature].spec.ts
-├── utils/TestDataHelper.ts, WaitHelper.ts
-└── playwright.config.ts
-```
+## 9. OUTPUT STRUCTURE — CRITICAL
+DO NOT generate playwright.config.ts
+This file exists permanently at project root level
+Only generate these files:
+- pages/[Name]Page.ts
+- tests/[feature].spec.ts
+- utils/TestDataHelper.ts
+- utils/WaitHelper.ts
+
+## 10. DOM SNAPSHOT RULES — CRITICAL
+
+Snapshots labeled: === PAGE: LoginPage === , === PAGE: DashboardPage ===
+
+ALWAYS:
+- Extract locators ONLY from the matching page snapshot
+- Follow priority: data-test → id → name → class
+- If element not in snapshot → add TODO comment
+
+NEVER:
+- Use locators from wrong page snapshot
+- Guess or fabricate any locator
+- Use locators not present in snapshot
+
+SIDEBAR/MENU PATTERN — CRITICAL:
+When logout or menu items are inside a sidebar/drawer:
+→ The sidebar is hidden by default
+→ ALWAYS click the burger/menu button FIRST to open sidebar
+→ THEN wait for sidebar item to be visible
+→ THEN click the sidebar item
+
+❌ WRONG — clicking hidden sidebar item directly:
+async clickLogoutButton(): Promise<void> {
+  await this.logoutSidebarLinkLocator.click();
+}
+
+✅ CORRECT — open menu first then click:
+async clickLogoutButton(): Promise<void> {
+  await this.burgerMenuLocator.click();
+  await this.logoutSidebarLinkLocator.waitFor({ state: 'visible' });
+  await this.logoutSidebarLinkLocator.click();
+}

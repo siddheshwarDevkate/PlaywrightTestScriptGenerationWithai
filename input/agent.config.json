@@ -35,7 +35,7 @@
   "generation": {
     "generateBasePage": true,
     "generateUtils": true,
-    "generateConfig": true,
+    "generateConfig": false,
     "inferValidationsFromDOM": true,
     "generateNegativeTests": true,
     "generateEdgeCases": true

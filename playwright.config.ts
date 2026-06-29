@@ -1,14 +1,39 @@
-import type { PlaywrightTestConfig } from '@playwright/test';
+import * as fs from 'fs';
+import * as path from 'path';
+import { defineConfig, devices } from '@playwright/test';
+// ── Single source of truth — reads from agent.config.json ──
+const agentConfig = JSON.parse(
+  fs.readFileSync(
+    path.resolve(__dirname, 'input/agent.config.json'),
+    'utf-8'
+  )
+);
 
-const config: PlaywrightTestConfig = {
-  testDir: 'generated/tests',
-  /* Shared settings for all the browsers */
+export default defineConfig({
+  testDir: './generated/tests',
+  testMatch: '**/*.spec.ts',
+  fullyParallel: false,
+  retries: 0,
+  workers: 1,
+
+  reporter: [
+    ['list'],
+    ['html', { outputFolder: './playwright-report' }]
+  ],
+
   use: {
-    baseURL: 'https://www.saucedemo.com',
-    browserName: 'chromium',
+    baseURL: agentConfig.application.baseUrl, // ← auto from config
+    trace: 'on-first-retry',
+    screenshot: 'only-on-failure',
     headless: false,
-    viewportSize: { width: 1280, height: 720 },
+    actionTimeout: 15000,
+    navigationTimeout: 30000
   },
-};
 
-export default config;
+  projects: [
+    {
+      name: 'chromium',
+      use: { ...devices['Desktop Chrome'] }
+    }
+  ]
+});
