@@ -30,7 +30,8 @@ export class Generator {
 
       const importantTags = [
         'input', 'button', 'select', 'textarea',
-        'a', 'form', 'label', 'h1', 'h2', 'h3'
+        'a', 'form', 'label', 'h1', 'h2', 'h3',
+        'nav', 'ul', 'li', 'header'
       ];
 
       const extractElement = (el: Element, depth: number = 0): string => {
@@ -39,7 +40,8 @@ export class Generator {
         if (!importantTags.includes(tag)) {
           let childResults = '';
           for (const child of Array.from(el.children)) {
-            childResults += extractElement(child, depth);
+            const result = extractElement(child, depth);
+            if (result) childResults += result + '\n';  // ← add newline
           }
           return childResults;
         }

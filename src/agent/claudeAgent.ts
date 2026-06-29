@@ -1,5 +1,5 @@
 import { AgentConfig, NavigationPlan } from '../utils/configLoader';
-import { GoogleGenAI } from "@google/genai";
+
 export class ClaudeAgent {
 
   private config: AgentConfig;
@@ -11,49 +11,38 @@ export class ClaudeAgent {
   }
 
   // ── Get base URL per provider ─────────────────────────────
-private getBaseUrl(): string {
-  switch (this.config.ai.provider) {
-    case 'anthropic':
-      return 'https://api.anthropic.com/v1/messages';
-
-    case 'groq':
-      return 'https://api.groq.com/openai/v1/chat/completions';
-
-    case 'openai':
-      return 'https://api.openai.com/v1/chat/completions';
-
-    case 'gemini':
-      return 'gemini-sdk';
-
-    default:
-      throw new Error(`Unsupported provider: ${this.config.ai.provider}`);
+  private getBaseUrl(): string {
+    switch (this.config.ai.provider) {
+      case 'anthropic':
+        return 'https://api.anthropic.com/v1/messages';
+      case 'groq':
+        return 'https://api.groq.com/openai/v1/chat/completions';
+      case 'openai':
+        return 'https://api.openai.com/v1/chat/completions';
+      default:
+        throw new Error(`Unsupported provider: ${this.config.ai.provider}`);
+    }
   }
-}
 
   // ── Get headers per provider ──────────────────────────────
- private getHeaders(): Record<string, string> {
-  switch (this.config.ai.provider) {
-    case 'anthropic':
-      return {
-        'Content-Type': 'application/json',
-        'x-api-key': this.apiKey,
-        'anthropic-version': '2023-06-01'
-      };
-
-    case 'groq':
-    case 'openai':
-      return {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.apiKey}`
-      };
-
-    case 'gemini':
-      return {};
-
-    default:
-      throw new Error(`Unsupported provider: ${this.config.ai.provider}`);
+  private getHeaders(): Record<string, string> {
+    switch (this.config.ai.provider) {
+      case 'anthropic':
+        return {
+          'Content-Type': 'application/json',
+          'x-api-key': this.apiKey,
+          'anthropic-version': '2023-06-01'
+        };
+      case 'groq':
+      case 'openai':
+        return {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this.apiKey}`
+        };
+      default:
+        throw new Error(`Unsupported provider: ${this.config.ai.provider}`);
+    }
   }
-}
 
   // ── Build request body per provider ──────────────────────
   private buildRequestBody(
@@ -81,85 +70,75 @@ private getBaseUrl(): string {
             { role: 'user', content: userPrompt }
           ]
         };
-      case 'gemini':
-      return {}; 
       default:
         throw new Error(`Unsupported provider: ${this.config.ai.provider}`);
     }
   }
 
   // ── Extract text response per provider ───────────────────
- private extractResponse(data: Record<string, unknown>): string {
-  switch (this.config.ai.provider) {
+  private extractResponse(data: Record<string, unknown>): string {
+    switch (this.config.ai.provider) {
+      case 'anthropic': {
+        const content = data.content as Array<{ text: string }>;
+        return content[0].text;
+      }
+      case 'groq':
+      case 'openai': {
+        const choices = data.choices as Array<{
+          message: { content: string }
+        }>;
+        return choices[0].message.content;
+      }
+      default:
+        throw new Error(`Unsupported provider: ${this.config.ai.provider}`);
+    }
+  }
 
-    case 'anthropic': {
-      const content = data.content as Array<{ text: string }>;
-      return content[0].text;
+  // ── Generic API call with retry on rate limit ─────────────
+  private async callAPI(
+    systemPrompt: string,
+    userPrompt: string,
+    maxTokens?: number
+  ): Promise<string> {
+    const maxRetries = 3;
+
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      const response = await fetch(this.getBaseUrl(), {
+        method: 'POST',
+        headers: this.getHeaders(),
+        body: JSON.stringify(
+          this.buildRequestBody(systemPrompt, userPrompt, maxTokens)
+        )
+      });
+
+      if (response.ok) {
+        const data = await response.json() as Record<string, unknown>;
+        return this.extractResponse(data);
+      }
+
+      const errorText = await response.text();
+
+      // Rate limit → wait and retry
+      if (response.status === 429) {
+        const waitSeconds = attempt * 65;
+        console.log(`\n⏳ Rate limit hit → waiting ${waitSeconds}s before retry ${attempt}/${maxRetries}...`);
+        await new Promise(resolve => setTimeout(resolve, waitSeconds * 1000));
+        continue;
+      }
+
+      throw new Error(
+        `API call failed [${this.config.ai.provider}]: ${response.status} - ${errorText}`
+      );
     }
 
-    case 'groq':
-    case 'openai': {
-      const choices = data.choices as Array<{
-        message: { content: string }
-      }>;
-      return choices[0].message.content;
-    }
-
-    case 'gemini':
-      return '';
-
-    default:
-      throw new Error(`Unsupported provider: ${this.config.ai.provider}`);
+    throw new Error('Max retries exceeded');
   }
-}
-
-  // ── Generic API call ──────────────────────────────────────
- // ── Generic API call ──────────────────────────────────────
-private async callAPI(
-  systemPrompt: string,
-  userPrompt: string,
-  maxTokens?: number
-): Promise<string> {
-
-  // Gemini SDK path
-  if (this.config.ai.provider === 'gemini') {
-    const ai = new GoogleGenAI({
-      apiKey: this.apiKey
-    });
-
-    const response = await ai.models.generateContent({
-      model: this.config.ai.model,
-      contents: `${systemPrompt}\n\n${userPrompt}`
-    });
-
-    return response.text ?? '';
-  }
-
-  // Existing providers
-  const response = await fetch(this.getBaseUrl(), {
-    method: 'POST',
-    headers: this.getHeaders(),
-    body: JSON.stringify(
-      this.buildRequestBody(systemPrompt, userPrompt, maxTokens)
-    )
-  });
-
-  if (!response.ok) {
-    const error = await response.text();
-    throw new Error(
-      `API call failed [${this.config.ai.provider}]: ${response.status} - ${error}`
-    );
-  }
-
-  const data = await response.json() as Record<string, unknown>;
-  return this.extractResponse(data);
-}
 
   // ── PHASE 1: Plan navigation from TC document ─────────────
   async planNavigation(testCases: string): Promise<NavigationPlan> {
     console.log('\n🗺️  Phase 1: Analysing TC document → building navigation plan...');
 
-  const systemPrompt = `
+    const systemPrompt = `
 You are a QA architect. Analyse test cases and return a navigation plan as JSON only.
 No explanation, no markdown, no code fences — return ONLY raw JSON.
 

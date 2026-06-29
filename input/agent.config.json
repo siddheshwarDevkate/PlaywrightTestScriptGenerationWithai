@@ -1,7 +1,7 @@
 {
   "ai": {
-    "provider": "gemini",
-    "model": "gemini-2.0-flash",
+    "provider": "groq",
+    "model": "llama-3.3-70b-versatile",
     "maxTokens": 8096,
     "temperature": 0.2,
     "apiKeyEnvVar": "GROQ_API_KEY"

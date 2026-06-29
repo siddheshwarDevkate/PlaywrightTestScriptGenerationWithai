@@ -1,140 +1,76 @@
-# Generator Rules — MANDATORY STANDARDS
-# Every rule below is STRICT. Violations cause TypeScript errors.
+# Generator Rules — MANDATORY. Violations cause TypeScript errors.
 
----
-
-## GOLDEN RULES — NEVER VIOLATE
-
+## GOLDEN RULES
 ```
-1. ALL locators → private readonly inside page class ONLY
-2. NEVER access locators directly from spec files
+1. ALL locators → private readonly in page class ONLY
+2. NEVER access locators or protected properties from spec files
 3. ALWAYS expose public verify/action methods for spec files
 4. NEVER use textContent() → ALWAYS use innerText()
-5. NEVER use page.waitForTimeout() → use Playwright built-in waits
-6. NEVER use any type in TypeScript
-7. Spec files ONLY call public methods — NEVER touch locators
-8. ALWAYS import { Page, Locator, expect } from '@playwright/test' in every page class
-9. ALWAYS use exact locators from DOM snapshot — NEVER guess or fabricate
+5. NEVER use page.waitForTimeout()
+6. NEVER use any type
+7. ALWAYS import { Page, Locator, expect } from '@playwright/test'
+8. ALWAYS use ONLY locators found in DOM snapshot — NEVER guess
+9. If locator not in DOM snapshot → write TODO comment, never fabricate
 ```
 
----
+## 1. LOCATOR PRIORITY
+```
+1. [data-test="x"] or [data-testid="x"]
+2. #id
+3. [name="x"]
+4. getByRole / getByLabel
+5. input[type="email"] (specific CSS)
+6. XPath (last resort)
+```
+Never use: generic classes `.btn`, positional `div:nth-child(2)`
 
-## 1. LOCATOR STRATEGY (Priority Order)
-
-```typescript
-1. data-testid   → page.locator('[data-testid="login-button"]')
-2. id            → page.locator('#email')
-3. name          → page.locator('[name="username"]')
-4. ARIA role     → page.getByRole('button', { name: 'Login' })
-5. CSS specific  → page.locator('input[type="email"]')
-6. XPath         → last resort only
+## 2. XPATH (last resort only)
+```
+AND:      //button[@type='submit' and @class='btn-primary']
+OR:       //button[@id='login' or @name='btn']
+ancestor: //input[ancestor::form[@id='loginForm']]
+sibling:  //label[text()='Email']/following-sibling::input
+contains: //button[contains(text(),'Login')]
 ```
 
-NEVER USE: generic classes `.btn`, positional `div:nth-child(2)`
-
----
-
-## 2. XPATH RULES
-
-```
-AND condition:   //button[@type='submit' and @class='btn-primary']
-OR condition:    //button[@id='login' or @name='loginBtn']
-ancestor axis:   //input[@type='password' and ancestor::form[@id='loginForm']]
-sibling axis:    //label[text()='Email']/following-sibling::input
-contains():      //button[contains(text(),'Login')]
-```
-
----
-
-## 3. LOCATOR ACCESS RULES
-
-```typescript
-✅ CORRECT — private readonly, exposed via public methods:
-private readonly errorMessageLocator: Locator;
-
-async verifyErrorMessageVisible(): Promise<void> {
-  await expect(this.errorMessageLocator).toBeVisible();
-}
-
-❌ WRONG — public locator, accessed from spec:
-public errorMessageLocator: Locator;
-await expect(loginPage.errorMessageLocator).toBeVisible();
-```
-
-Every locator MUST have a public verify method. Spec files call ONLY these methods.
-
----
-
-## 4. RETURN TYPE RULES
-
-```typescript
-❌ WRONG: return await this.locator.textContent(); // string | null = error
-✅ CORRECT: return await this.locator.innerText();  // string = correct
-```
-
----
-
-## 5. PAGE CLASS STRUCTURE
-
+## 3. PAGE CLASS TEMPLATE
 ```typescript
 import { Page, Locator, expect } from '@playwright/test';
 import { BasePage } from './BasePage';
 
-export class [PageName]Page extends BasePage {
-
-  private readonly [element]Locator: Locator;
+export class [Name]Page extends BasePage {
+  private readonly [el]Locator: Locator;
 
   constructor(page: Page) {
     super(page);
-    this.[element]Locator = page.locator('[selector from DOM snapshot]');
+    this.[el]Locator = page.locator('[from DOM snapshot]');
   }
 
-  async navigateTo(): Promise<void> {
-    await this.page.goto('[url]');
-  }
-
-  async fill[Element](value: string): Promise<void> {
-    await this.[element]Locator.fill(value);
-  }
-
-  async click[Element](): Promise<void> {
-    await this.[element]Locator.click();
-  }
-
-  async get[Element]Text(): Promise<string> {
-    return await this.[element]Locator.innerText(); // ALWAYS innerText
-  }
-
-  async verify[Element]Visible(): Promise<void> {
-    await expect(this.[element]Locator).toBeVisible();
-  }
-
-  async verify[Element]Hidden(): Promise<void> {
-    await expect(this.[element]Locator).toBeHidden();
-  }
-
-  async perform[Action](param1: string, param2: string): Promise<void> {
-    await this.fill[Element1](param1);
-    await this.fill[Element2](param2);
-    await this.click[Element]();
+  async navigateTo(): Promise<void> { await this.page.goto('[url]'); }
+  async fill[El](v: string): Promise<void> { await this.[el]Locator.fill(v); }
+  async click[El](): Promise<void> { await this.[el]Locator.click(); }
+  async get[El]Text(): Promise<string> { return await this.[el]Locator.innerText(); }
+  async verify[El]Visible(): Promise<void> { await expect(this.[el]Locator).toBeVisible(); }
+  async verify[El]Hidden(): Promise<void> { await expect(this.[el]Locator).toBeHidden(); }
+  async verifyCurrentUrl(url: string): Promise<void> { await expect(this.page).toHaveURL(url); }
+  async verifyPageTitle(t: string): Promise<void> { await expect(this.page).toHaveTitle(t); }
+  async perform[Action](p1: string, p2: string): Promise<void> {
+    await this.fill[El1](p1);
+    await this.fill[El2](p2);
+    await this.click[El]();
   }
 }
 ```
+Every page MUST have: `verifyCurrentUrl()` and `verifyPageTitle()`
 
----
-
-## 6. SPEC FILE STRUCTURE
-
+## 4. SPEC FILE TEMPLATE
 ```typescript
-✅ CORRECT — spec calls ONLY public methods:
 import { test } from '@playwright/test';
 import { LoginPage } from '../pages/LoginPage';
 import { DashboardPage } from '../pages/DashboardPage';
 
 const validUsername = 'standard_user';
 const validPassword = 'secret_sauce';
-const invalidUsername = 'invalid_user';
-const invalidPassword = 'invalid_password';
 
 test.describe('Login', () => {
   let loginPage: LoginPage;
@@ -147,15 +83,11 @@ test.describe('Login', () => {
   });
 
   test.describe('Happy Path', () => {
-    test('Valid credentials should redirect to dashboard', async () => {
-      await loginPage.fillUsername(validUsername);
-      await loginPage.fillPassword(validPassword);
-      await loginPage.clickLoginButton();
+    test('Valid login redirects to dashboard', async () => {
+      await loginPage.performLogin(validUsername, validPassword);
       await dashboardPage.verifyDashboardVisible();
-      await dashboardPage.verifyWelcomeMessageVisible();
     });
-
-    test('Logout should redirect back to login page', async () => {
+    test('Logout redirects to login', async () => {
       await loginPage.performLogin(validUsername, validPassword);
       await dashboardPage.clickLogoutButton();
       await loginPage.verifyUsernameInputVisible();
@@ -163,118 +95,74 @@ test.describe('Login', () => {
   });
 
   test.describe('Negative Scenarios', () => {
-    test('Invalid username should show error', async () => {
-      await loginPage.fillUsername(invalidUsername);
+    test('Invalid username shows error', async () => {
+      await loginPage.fillUsername('wrong');
       await loginPage.fillPassword(validPassword);
       await loginPage.clickLoginButton();
       await loginPage.verifyErrorMessageVisible();
     });
-
-    test('Invalid password should show error', async () => {
-      await loginPage.fillUsername(validUsername);
-      await loginPage.fillPassword(invalidPassword);
-      await loginPage.clickLoginButton();
-      await loginPage.verifyErrorMessageVisible();
-    });
-
-    test('Empty username should show error', async () => {
-      await loginPage.fillPassword(validPassword);
-      await loginPage.clickLoginButton();
-      await loginPage.verifyErrorMessageVisible();
-    });
-
-    test('Empty password should show error', async () => {
-      await loginPage.fillUsername(validUsername);
-      await loginPage.clickLoginButton();
-      await loginPage.verifyErrorMessageVisible();
-    });
-
-    test('Both fields empty should show error', async () => {
-      await loginPage.clickLoginButton();
-      await loginPage.verifyErrorMessageVisible();
-    });
-  });
-
-  test.describe('Edge Cases', () => {
-    test('SQL injection should show error', async () => {
-      await loginPage.fillUsername("' OR '1'='1");
-      await loginPage.fillPassword(validPassword);
+    test('Empty fields show error', async () => {
       await loginPage.clickLoginButton();
       await loginPage.verifyErrorMessageVisible();
     });
   });
 });
 
-❌ WRONG — NEVER do these in spec files:
-await expect(loginPage.errorMessageLocator).toBeVisible();       // private locator
-await expect(dashboardPage.welcomeMessageLocator).toBeVisible(); // private locator
-await dashboardPage.waitForElement(dashboardPage.locator);       // private locator
-await page.waitForTimeout(2000);                                 // hardcoded wait
-return await this.locator.textContent();                         // wrong return type
+❌ NEVER in spec files:
+await expect(loginPage.errorMessageLocator).toBeVisible();   // private locator
+await expect(loginPage.page).toHaveURL('/dashboard');        // protected property
+await dashboardPage.waitForElement(dashboardPage.locator);   // private locator
+await page.waitForTimeout(2000);                             // hardcoded wait
 ```
 
----
-
-## 7. NAMING CONVENTIONS
-
+## 5. DOM SNAPSHOT RULES — CRITICAL
 ```
-Page files:   [PageName]Page.ts → LoginPage.ts, DashboardPage.ts
-Spec files:   [feature].spec.ts → login.spec.ts
-Locators:     private readonly [element]Locator
-Actions:      click[Element](), fill[Element]()
-Getters:      get[Element]Text()
-Verify:       verify[Element]Visible(), verify[Element]Hidden()
-Compound:     performLogin(), performSearch()
+Snapshots labeled: === PAGE: LoginPage === , === PAGE: DashboardPage ===
+
+ALWAYS:
+- Extract locators ONLY from the matching page snapshot
+- Follow priority: data-test → id → name → class
+- If element not in snapshot → add TODO comment
+
+NEVER:
+- Use locators from wrong page snapshot
+- Guess or fabricate any locator
+- Use locators not present in snapshot
 ```
 
----
-
-## 8. DOM INFERRED VALIDATIONS
-
-| DOM Attribute | Generate This Test |
-|---|---|
-| `required` | Empty field submission |
-| `minlength="n"` | Input below min length |
-| `maxlength="n"` | Input above max length |
-| `type="email"` | Invalid email format |
-| `type="number"` | Non-numeric input |
-| `disabled` | Element not interactable |
-
----
-
-## 9. ASSERTION PATTERNS
-
+## 6. ASSERTIONS
 ```typescript
-✅ USE THESE:
-await expect(this.locator).toBeVisible();
-await expect(this.locator).toBeHidden();
-await expect(this.locator).toHaveText('text');
-await expect(this.locator).toContainText('partial');
-await expect(this.locator).toHaveValue('value');
-await expect(this.locator).toBeEnabled();
-await expect(this.locator).toBeDisabled();
-await expect(this.page).toHaveURL('/dashboard');
-await expect(this.page).toHaveTitle('Title');
-
-❌ NEVER USE:
-await page.waitForTimeout(2000);
-expect(await locator.isVisible()).toBe(true);
-await locator.textContent();
+✅ await expect(this.locator).toBeVisible();
+✅ await expect(this.locator).toHaveText('text');
+✅ await expect(this.locator).toHaveValue('val');
+✅ await expect(this.page).toHaveURL('/path');
+❌ locator.textContent()
+❌ page.waitForTimeout()
+❌ expect(await locator.isVisible()).toBe(true)
 ```
 
----
+## 7. DOM INFERRED TESTS
+| Attribute | Test |
+|---|---|
+| required | Empty field test |
+| type="email" | Invalid format test |
+| minlength/maxlength | Boundary tests |
+| disabled | Not interactable test |
 
-## 10. OUTPUT STRUCTURE
+## 8. NAMING
+```
+Files:    LoginPage.ts, login.spec.ts
+Locators: private readonly emailInputLocator
+Actions:  fillEmail(), clickLoginButton()
+Verify:   verifyErrorMessageVisible(), verifyCurrentUrl()
+Compound: performLogin(), performSearch()
+```
 
+## 9. OUTPUT STRUCTURE
 ```
 generated/
-├── pages/
-│   ├── BasePage.ts
-│   └── [Feature]Page.ts
-├── tests/
-│   └── [feature].spec.ts
-├── utils/
-│   ├── TestDataHelper.ts
-│   └── WaitHelper.ts
+├── pages/BasePage.ts, [Name]Page.ts
+├── tests/[feature].spec.ts
+├── utils/TestDataHelper.ts, WaitHelper.ts
 └── playwright.config.ts
 ```

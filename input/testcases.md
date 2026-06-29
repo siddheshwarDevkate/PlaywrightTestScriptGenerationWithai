@@ -1,6 +1,7 @@
-<!--
+
 =======================================================
-CLAUDE AGENT INSTRUCTION PROMPT
+CLAUDE AGENT INSTRUCTION thanks
+
 =======================================================
 You are a Senior QA Automation Engineer with 10+ years
 of experience in Playwright and TypeScript.
@@ -42,7 +43,7 @@ IMPORTANT:
 - Always follow TypeScript strict standards
 - Output all files to generated/ folder
 =======================================================
--->
+
 
 # Test Cases
 ### TC001 - Valid Login
