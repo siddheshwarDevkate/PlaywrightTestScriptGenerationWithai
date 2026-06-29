@@ -1,0 +1,122 @@
+
+=== PAGE: LoginPage ===
+URL: https://www.saucedemo.com/
+<form >
+  <input class="input_error form_input" placeholder="Username" type="text" data-test="username" id="user-name" name="user-name" value="">
+
+  <input class="input_error form_input" placeholder="Password" type="password" data-test="password" id="password" name="password" value="">
+
+  <input type="submit" class="submit-button btn_action" data-test="login-button" id="login-button" name="login-button" value="Login">
+
+
+
+
+
+
+
+
+=== PAGE: DashboardPage ===
+URL: https://www.saucedemo.com/inventory.html
+<button type="button" id="react-burger-menu-btn">Open Menu
+
+
+<nav class="bm-item-list">
+  <a id="inventory_sidebar_link" class="bm-item menu-item" href="#" data-test="inventory-sidebar-link">All Items
+  <a id="about_sidebar_link" class="bm-item menu-item" href="https://saucelabs.com/" data-test="about-sidebar-link">About
+  <a id="logout_sidebar_link" class="bm-item menu-item" href="#" data-test="logout-sidebar-link">Logout
+  <a id="reset_sidebar_link" class="bm-item menu-item" href="#" data-test="reset-sidebar-link">Reset App State
+
+<button type="button" id="react-burger-cross-btn">Close Menu
+
+
+
+
+
+<a class="shopping_cart_link" data-test="shopping-cart-link">
+
+
+<select class="product_sort_container" data-test="product-sort-container">
+
+
+
+
+<a href="#" id="item_4_img_link" data-test="item-4-img-link">
+
+<a href="#" id="item_4_title_link" data-test="item-4-title-link">
+
+<button class="btn btn_primary btn_small btn_inventory " data-test="add-to-cart-sauce-labs-backpack" id="add-to-cart-sauce-labs-backpack" name="add-to-cart-sauce-labs-backpack">Add to cart
+
+
+
+<a href="#" id="item_0_img_link" data-test="item-0-img-link">
+
+<a href="#" id="item_0_title_link" data-test="item-0-title-link">
+
+<button class="btn btn_primary btn_small btn_inventory " data-test="add-to-cart-sauce-labs-bike-light" id="add-to-cart-sauce-labs-bike-light" name="add-to-cart-sauce-labs-bike-light">Add to cart
+
+
+
+<a href="#" id="item_1_img_link" data-test="item-1-img-link">
+
+<a href="#" id="item_1_title_link" data-test="item-1-title-link">
+
+<button class="btn btn_primary btn_small btn_inventory " data-test="add-to-cart-sauce-labs-bolt-t-shirt" id="add-to-cart-sauce-labs-bolt-t-shirt" name="add-to-cart-sauce-labs-bolt-t-shirt">Add to cart
+
+
+
+<a href="#" id="item_5_img_link" data-test="item-5-img-link">
+
+<a href="#" id="item_5_title_link" data-test="item-5-title-link">
+
+<button class="btn btn_primary btn_small btn_inventory " data-test="add-to-cart-sauce-labs-fleece-jacket" id="add-to-cart-sauce-labs-fleece-jacket" name="add-to-cart-sauce-labs-fleece-jacket">Add to cart
+
+
+
+<a href="#" id="item_2_img_link" data-test="item-2-img-link">
+
+<a href="#" id="item_2_title_link" data-test="item-2-title-link">
+
+<button class="btn btn_primary btn_small btn_inventory " data-test="add-to-cart-sauce-labs-onesie" id="add-to-cart-sauce-labs-onesie" name="add-to-cart-sauce-labs-onesie">Add to cart
+
+
+
+<a href="#" id="item_3_img_link" data-test="item-3-img-link">
+
+<a href="#" id="item_3_title_link" data-test="item-3-title-link">
+
+<button class="btn btn_primary btn_small btn_inventory " data-test="add-to-cart-test.allthethings()-t-shirt-(red)" id="add-to-cart-test.allthethings()-t-shirt-(red)" name="add-to-cart-test.allthethings()-t-shirt-(red)">Add to cart
+
+
+
+
+
+
+
+
+<ul class="social">
+  <li class="social_twitter">
+    <a href="https://twitter.com/saucelabs" data-test="social-twitter">Twitter
+  <li class="social_facebook">
+    <a href="https://www.facebook.com/saucelabs" data-test="social-facebook">Facebook
+  <li class="social_linkedin">
+    <a href="https://www.linkedin.com/company/sauce-labs/" data-test="social-linkedin">LinkedIn
+
+
+
+
+
+=== PAGE: DashboardPage ===
+URL: https://www.saucedemo.com/
+<form >
+  <input class="input_error form_input" placeholder="Username" type="text" data-test="username" id="user-name" name="user-name" value="">
+
+  <input class="input_error form_input" placeholder="Password" type="password" data-test="password" id="password" name="password" value="">
+
+  <input type="submit" class="submit-button btn_action" data-test="login-button" id="login-button" name="login-button" value="Login">
+
+
+
+
+
+
+

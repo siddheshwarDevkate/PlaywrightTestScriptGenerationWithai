@@ -1,0 +1,181 @@
+### Automation Framework
+
+The following is a complete automation framework for the provided test cases, following all the coding standards and rules specified in the generator.md file.
+
+### === FILE: pages/BasePage.ts ===
+```typescript
+import { Page, Locator, expect } from '@playwright/test';
+
+export class BasePage {
+  protected readonly page: Page;
+
+  constructor(page: Page) {
+    this.page = page;
+  }
+
+  async navigateTo(url: string): Promise<void> {
+    await this.page.goto(url);
+  }
+
+  async verifyCurrentUrl(url: string): Promise<void> {
+    await expect(this.page).toHaveURL(url);
+  }
+
+  async verifyPageTitle(title: string): Promise<void> {
+    await expect(this.page).toHaveTitle(title);
+  }
+}
+```
+=== END FILE ===
+
+### === FILE: pages/LoginPage.ts ===
+```typescript
+import { Page, Locator, expect } from '@playwright/test';
+import { BasePage } from './BasePage';
+
+export class LoginPage extends BasePage {
+  private readonly usernameInputLocator: Locator;
+  private readonly passwordInputLocator: Locator;
+  private readonly loginButtonLocator: Locator;
+
+  constructor(page: Page) {
+    super(page);
+    this.usernameInputLocator = page.locator('[data-test="username"]');
+    this.passwordInputLocator = page.locator('[data-test="password"]');
+    this.loginButtonLocator = page.locator('[data-test="login-button"]');
+  }
+
+  async fillUsername(username: string): Promise<void> {
+    await this.usernameInputLocator.fill(username);
+  }
+
+  async fillPassword(password: string): Promise<void> {
+    await this.passwordInputLocator.fill(password);
+  }
+
+  async clickLoginButton(): Promise<void> {
+    await this.loginButtonLocator.click();
+  }
+
+  async verifyErrorMessageVisible(): Promise<void> {
+    await expect(this.page.locator('.error-message')).toBeVisible();
+  }
+
+  async performLogin(username: string, password: string): Promise<void> {
+    await this.fillUsername(username);
+    await this.fillPassword(password);
+    await this.clickLoginButton();
+  }
+}
+```
+=== END FILE ===
+
+### === FILE: pages/DashboardPage.ts ===
+```typescript
+import { Page, Locator, expect } from '@playwright/test';
+import { BasePage } from './BasePage';
+
+export class DashboardPage extends BasePage {
+  private readonly logoutButtonLocator: Locator;
+
+  constructor(page: Page) {
+    super(page);
+    this.logoutButtonLocator = page.locator('[data-test="logout-sidebar-link"]');
+  }
+
+  async clickLogoutButton(): Promise<void> {
+    await this.logoutButtonLocator.click();
+  }
+
+  async verifyDashboardVisible(): Promise<void> {
+    await expect(this.page.locator('#inventory_sidebar_link')).toBeVisible();
+  }
+}
+```
+=== END FILE ===
+
+### === FILE: tests/login.spec.ts ===
+```typescript
+import { test } from '@playwright/test';
+import { LoginPage } from '../pages/LoginPage';
+import { DashboardPage } from '../pages/DashboardPage';
+
+const validUsername = 'standard_user';
+const validPassword = 'secret_sauce';
+
+test.describe('Login', () => {
+  let loginPage: LoginPage;
+  let dashboardPage: DashboardPage;
+
+  test.beforeEach(async ({ page }) => {
+    loginPage = new LoginPage(page);
+    dashboardPage = new DashboardPage(page);
+    await loginPage.navigateTo('https://www.saucedemo.com/');
+  });
+
+  test('Valid login redirects to dashboard', async () => {
+    await loginPage.performLogin(validUsername, validPassword);
+    await dashboardPage.verifyDashboardVisible();
+  });
+
+  test('Invalid email format shows error', async () => {
+    await loginPage.fillUsername('notanemail');
+    await loginPage.fillPassword(validPassword);
+    await loginPage.clickLoginButton();
+    await loginPage.verifyErrorMessageVisible();
+  });
+
+  test('Invalid password shows error', async () => {
+    await loginPage.fillUsername(validUsername);
+    await loginPage.fillPassword('wrongpassword');
+    await loginPage.clickLoginButton();
+    await loginPage.verifyErrorMessageVisible();
+  });
+
+  test('Empty username and password shows error', async () => {
+    await loginPage.clickLoginButton();
+    await loginPage.verifyErrorMessageVisible();
+  });
+
+  test('Logout functionality', async () => {
+    await loginPage.performLogin(validUsername, validPassword);
+    await dashboardPage.clickLogoutButton();
+    await loginPage.verifyCurrentUrl('https://www.saucedemo.com/');
+  });
+});
+```
+=== END FILE ===
+
+### === FILE: utils/TestDataHelper.ts ===
+```typescript
+export const validUsername = 'standard_user';
+export const validPassword = 'secret_sauce';
+```
+=== END FILE ===
+
+### === FILE: utils/WaitHelper.ts ===
+```typescript
+// No need for this file as we are using Playwright's built-in waiting mechanisms
+```
+=== END FILE ===
+
+### === FILE: playwright.config.ts ===
+```typescript
+import type { PlaywrightTestConfig } from '@playwright/test';
+
+const config: PlaywrightTestConfig = {
+  testDir: './generated/tests',
+  /* Shared settings for all the browsers */
+  use: {
+    baseURL: 'https://www.saucedemo.com/',
+    browserName: 'chromium',
+    headless: false,
+    viewportSize: { width: 1280, height: 720 },
+  },
+};
+
+export default config;
+```
+=== END FILE ===
+
+Note: The above code is a basic implementation and might need to be adjusted according to the specific requirements of your project. Additionally, the `utils/WaitHelper.ts` file is not needed in this case as we are using Playwright's built-in waiting mechanisms.

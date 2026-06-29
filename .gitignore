@@ -9,7 +9,7 @@ node_modules/
 dist/
 
 # Generated test scripts (optional - remove if you want to commit generated code)
-generated/
+
 
 # Playwright
 test-results/
